@@ -5,12 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import static com.app.util.MessageConstants.*;
 
 
 @Getter
 @Setter
+@ToString
 public class UserRequestDTO {
 
     @JsonProperty("id")

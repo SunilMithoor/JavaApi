@@ -1,5 +1,6 @@
 package com.app.controller;
 
+import com.app.config.LoggerService;
 import com.app.dto.UserRequestDTO;
 import com.app.facade.UserFacade;
 import com.app.model.common.ResponseHandler;
@@ -14,8 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +37,10 @@ public class UserController {
 
     @Autowired
     private UserFacade facade;
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    @Autowired
+    private LoggerService logger;
+
+    private final String TAG = "UserController";
 
 
     /**
@@ -69,9 +71,10 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
     public ResponseEntity<?> saveUser(@Valid @RequestBody UserRequestDTO userDto, BindingResult result) {
-        logger.info("Received request to save user: {}", userDto);
+        String methodName = "saveUser";
+        logger.request(TAG, methodName, userDto);
         if (result.hasErrors()) {
-            logger.error("Request error:{} ", result.getAllErrors());
+            logger.response(TAG, methodName, result.getAllErrors());
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, result.getAllErrors().toString());
         }
         return ResponseEntity.ok(facade.saveUser(userDto));
@@ -106,19 +109,20 @@ public class UserController {
     })
 
     public ResponseEntity<Object> getUserById(@PathVariable String id) {
-        logger.info("Received request to get user: {}", id);
+        String methodName = "getUserById";
+        logger.request(TAG,methodName, id);
 
         if (id == null || id.trim().isEmpty()) {
-            logger.warn("Invalid user ID received: {}", id);
+            logger.warn(TAG, "Invalid user ID received: {}");
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, INVALID_USER_ID);
         }
 
         Object result = facade.getUser(id);
         if (result == null) {
-            logger.warn("User not found for ID: {}", id);
+            logger.warn(TAG, "User not found for ID: {}");
             return ResponseHandler.failure(HttpStatus.NOT_FOUND, USER_NOT_FOUND);
         }
-        logger.info("User data retrieved successfully. Response: {}", result);
+        logger.response(TAG, methodName,result);
         return ResponseHandler.success(HttpStatus.OK, result, USER_FETCH_SUCCESS);
 
     }
@@ -144,22 +148,19 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
     public ResponseEntity<Object> getUsers() {
-        logger.info("Received request to fetch all users");
-
+        String methodName = "getUsers";
+        logger.request(TAG, methodName,null);
         try {
             List<UserRequestDTO> result = facade.getUsers();
-
             if (result == null || result.isEmpty()) {
-                logger.warn("No users found in the database");
+                logger.warn(TAG, "No users found in the database");
                 return ResponseHandler.failure(HttpStatus.NO_CONTENT, NO_USERS_FOUND);
             }
-
-            logger.info("Successfully retrieved {} users", result.size());
+            logger.response(TAG, methodName,result.size());
             return ResponseHandler.success(HttpStatus.OK, result, USERS_FETCH_SUCCESS);
         } catch (Exception e) {
-            logger.error("Unexpected error retrieving users", e);
+            logger.error(TAG, "Unexpected error retrieving users", e);
             return ResponseHandler.failure(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR);
         }
     }
-
 }

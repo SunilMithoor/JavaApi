@@ -1,12 +1,12 @@
 package com.app.exception.common;
 
+import com.app.config.LoggerService;
 import com.app.exception.custom.InvalidParamException;
 import com.app.exception.custom.UserAlreadyExistException;
 import com.app.exception.custom.UserNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -27,7 +27,9 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    @Autowired
+    private LoggerService logger;
+    private final String TAG = "GlobalExceptionHandler";
 
     /**
      * Handles validation exceptions from @Valid in request bodies.
@@ -35,7 +37,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
         logger.warn("Validation exception: {}", ex.getMessage());
-
         String errorMessage = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
@@ -50,7 +51,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex) {
         logger.warn("Constraint violation: {}", ex.getMessage());
-
         String errorMessage = ex.getConstraintViolations()
                 .stream()
                 .map(ConstraintViolation::getMessage)
@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDuplicateKeyException(DataIntegrityViolationException ex) {
-        logger.error("Database constraint violation: {}", ex.getMessage());
+        logger.error("Database constraint violation: {}", ex.getMessage(),ex);
 
         String errorMessage = "Duplicate entry";
         if (ex.getCause() != null && ex.getCause().getMessage() != null) {
