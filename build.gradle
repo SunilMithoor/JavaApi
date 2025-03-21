@@ -9,11 +9,11 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.springframework.boot' version '3.2.0'
+    id 'org.springframework.boot' version '3.2.2'
     id 'io.spring.dependency-management' version '1.1.4'
 }
 
-group = 'com.javapi'
+group = 'com.app'
 version = '1.0.0'
 sourceCompatibility = '21'
 
@@ -22,16 +22,28 @@ repositories {
     mavenCentral()
 }
 
+configurations.configureEach {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'log4j', module: 'log4j'
+}
+
+
 dependencies {
-    // This dependency is used by the application.
-    implementation 'com.google.guava:guava:29.0-jre'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'mysql:mysql-connector-java:8.0.33'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+    implementation 'org.projectlombok:lombok:1.18.30'
+    implementation 'org.modelmapper:modelmapper:3.1.1'
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
+    implementation 'org.slf4j:slf4j-api:2.0.9'
 
-    // Use JUnit test framework
-    testImplementation 'junit:junit:4.13'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
@@ -47,5 +59,5 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClassName = 'com.app.AppApiApplication'
+    mainClassName = 'com.app.Application'
 }
