@@ -1,17 +1,20 @@
 package com.app.util;
 
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
 public class Constants {
 
-    public static final String API_VERSION = "/v1";
-    public static final String BASE_URL = "/api" + API_VERSION;
+    public static String BASE_URL = "/api";
 
-    public static final class UserPaths {
-        public static final String USER_PATH = BASE_URL + "/users";
+    @Value("${app.base-url:/api}")  // Inject from properties with a default
+    public void setBaseUrl(String baseUrl) {
+        BASE_URL = baseUrl;
     }
 
-    public static final class Client {
-        public static final String BASE_URL = "https://sunilmithoor.github.io/";
-    }
+    public static final String AUTH_PATH = BASE_URL + "/auth";
+    public static final String USER_PATH = BASE_URL + "/users";
 
 }

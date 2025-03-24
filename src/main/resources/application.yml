@@ -1,0 +1,13 @@
+#spring:
+#  profiles:
+#    active: dev  # Automatically picks application-dev.yml
+#
+#app:
+#  base-url: http://localhost:8080/api
+#
+#---
+#spring:
+#  profiles: prod
+#
+#app:
+#  base-url: https://api.yourdomain.com

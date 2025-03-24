@@ -1,7 +1,7 @@
 package com.app.controller;
 
 import com.app.config.LoggerService;
-import com.app.dto.UserRequestDTO;
+import com.app.dto.RegisterUserDto;
 import com.app.facade.UserFacade;
 import com.app.model.common.ResponseHandler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,20 +18,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.app.util.Constants.UserPaths.USER_PATH;
 import static com.app.util.MessageConstants.*;
+import static com.app.util.Utils.tagMethodName;
 
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(USER_PATH)
-@Tag(name = USER_PATH, description = "User APIs")
+@RequestMapping("/api/users")
+@Tag(name = "/api/users", description = "User APIs")
 @Validated
 public class UserController {
 
@@ -42,14 +44,33 @@ public class UserController {
 
     private final String TAG = "UserController";
 
+    /**
+     * Get user data
+     *
+     * @return RegisterUserDto
+     */
+    @GetMapping("/me")
+    public ResponseEntity<Object> authenticatedUser() {
+        String methodName = "authenticatedUser";
+        logger.request(tagMethodName(TAG, methodName), null);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        RegisterUserDto currentUser = (RegisterUserDto) authentication.getPrincipal();
+        if (currentUser == null) {
+            logger.response(tagMethodName(TAG, methodName), null);
+            return ResponseHandler.failure(HttpStatus.NOT_FOUND, USER_NOT_FOUND);
+        }
+        logger.response(tagMethodName(TAG, methodName), currentUser);
+        return ResponseHandler.success(HttpStatus.OK, currentUser, USER_FETCH_SUCCESS);
+    }
+
 
     /**
      * Save user
      *
-     * @param userDto as UserRequestDTO
-     * @return UserRequestDTO
+     * @param registerUserDto as RegisterUserDto
+     * @return RegisterUserDto
      */
-    @PostMapping
+    @PostMapping("/register")
     @Operation(
             summary = "Save User",
             description = "Save user to the database",
@@ -57,27 +78,27 @@ public class UserController {
                     description = "User data to save",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = UserRequestDTO.class)
+                            schema = @Schema(implementation = RegisterUserDto.class)
                     )
             )
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User saved successfully",
                     content = @Content(
-                            schema = @Schema(implementation = UserRequestDTO.class)
+                            schema = @Schema(implementation = RegisterUserDto.class)
                     )
             ),
             @ApiResponse(responseCode = "400", description = "Invalid request data"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    public ResponseEntity<?> saveUser(@Valid @RequestBody UserRequestDTO userDto, BindingResult result) {
+    public ResponseEntity<?> saveUser(@Valid @RequestBody RegisterUserDto registerUserDto, BindingResult result) {
         String methodName = "saveUser";
-        logger.request(TAG, methodName, userDto);
+        logger.request(tagMethodName(TAG, methodName), registerUserDto);
         if (result.hasErrors()) {
-            logger.response(TAG, methodName, result.getAllErrors());
+            logger.response(tagMethodName(TAG, methodName), result.getAllErrors());
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, result.getAllErrors().toString());
         }
-        return ResponseEntity.ok(facade.saveUser(userDto));
+        return ResponseEntity.ok(facade.saveUser(registerUserDto));
     }
 
 
@@ -102,7 +123,7 @@ public class UserController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User data fetched successfully",
-                    content = @Content(schema = @Schema(implementation = UserRequestDTO.class))),
+                    content = @Content(schema = @Schema(implementation = RegisterUserDto.class))),
             @ApiResponse(responseCode = "400", description = "Invalid User ID"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
@@ -110,19 +131,19 @@ public class UserController {
 
     public ResponseEntity<Object> getUserById(@PathVariable String id) {
         String methodName = "getUserById";
-        logger.request(TAG,methodName, id);
+        logger.request(tagMethodName(TAG, methodName), id);
 
         if (id == null || id.trim().isEmpty()) {
-            logger.warn(TAG, "Invalid user ID received: {}");
+            logger.warn(tagMethodName(TAG, methodName), "Invalid user ID received: {}");
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, INVALID_USER_ID);
         }
 
         Object result = facade.getUser(id);
         if (result == null) {
-            logger.warn(TAG, "User not found for ID: {}");
+            logger.warn(tagMethodName(TAG, methodName), "User not found for ID: {}");
             return ResponseHandler.failure(HttpStatus.NOT_FOUND, USER_NOT_FOUND);
         }
-        logger.response(TAG, methodName,result);
+        logger.response(tagMethodName(TAG, methodName), result);
         return ResponseHandler.success(HttpStatus.OK, result, USER_FETCH_SUCCESS);
 
     }
@@ -141,7 +162,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully",
                     content = @Content(
-                            array = @ArraySchema(schema = @Schema(implementation = UserRequestDTO.class))
+                            array = @ArraySchema(schema = @Schema(implementation = RegisterUserDto.class))
                     )
             ),
             @ApiResponse(responseCode = "204", description = "No users found"),
@@ -149,17 +170,17 @@ public class UserController {
     })
     public ResponseEntity<Object> getUsers() {
         String methodName = "getUsers";
-        logger.request(TAG, methodName,null);
+        logger.request(tagMethodName(TAG, methodName), null);
         try {
-            List<UserRequestDTO> result = facade.getUsers();
+            List<RegisterUserDto> result = facade.getUsers();
             if (result == null || result.isEmpty()) {
-                logger.warn(TAG, "No users found in the database");
+                logger.warn(tagMethodName(TAG, methodName), "No users found in the database");
                 return ResponseHandler.failure(HttpStatus.NO_CONTENT, NO_USERS_FOUND);
             }
-            logger.response(TAG, methodName,result.size());
+            logger.response(tagMethodName(TAG, methodName), result.size());
             return ResponseHandler.success(HttpStatus.OK, result, USERS_FETCH_SUCCESS);
         } catch (Exception e) {
-            logger.error(TAG, "Unexpected error retrieving users", e);
+            logger.error(tagMethodName(TAG, methodName), "Unexpected error retrieving users", e);
             return ResponseHandler.failure(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR);
         }
     }

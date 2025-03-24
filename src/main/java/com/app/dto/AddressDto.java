@@ -14,7 +14,7 @@ import static com.app.util.MessageConstants.*;
 
 @Getter
 @Setter
-public class AddressRequestDTO {
+public class AddressDto {
 
     @NotNull(message = USER_ID_REQUIRED)
     @JsonProperty("user_id")
