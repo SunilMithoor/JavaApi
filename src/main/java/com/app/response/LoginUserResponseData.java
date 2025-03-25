@@ -1,4 +1,4 @@
-package com.app.responses;
+package com.app.response;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;

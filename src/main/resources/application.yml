@@ -8,6 +8,12 @@
 #---
 #spring:
 #  profiles: prod
+#  redis:
+#    host: localhost
+#    port: 6379
+#    password: redis@spring#api
+#    timeout: 60000
+#    client-type: lettuce
 #
 #app:
 #  base-url: https://api.yourdomain.com

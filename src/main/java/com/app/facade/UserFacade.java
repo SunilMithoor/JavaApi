@@ -111,6 +111,7 @@ public class UserFacade {
             throw new InvalidParamException("User data cannot be null");
         }
 
+        // Check if user already exists
         if (registerUserDto.getId() != null) {
             User existingUser = userService.getUserById(registerUserDto.getId());
             if (existingUser != null) {
@@ -122,41 +123,36 @@ public class UserFacade {
             throw new InvalidParamException(EMAIL_ID_VALID);
         }
 
-        // Check if an email already exists
-        if (registerUserDto.getEmailId() != null) {
-            boolean exists = userService.isEmailExists(registerUserDto.getEmailId());
-            if (exists) {
-                throw new InvalidParamException(EMAIL_ID_ALREADY_REGISTERED);
-            }
+        // Check if email already exists
+        if (userService.isEmailExists(registerUserDto.getEmailId())) {
+            throw new InvalidParamException(EMAIL_ID_ALREADY_REGISTERED);
         }
 
         if (registerUserDto.getMobileNo() == null || registerUserDto.getMobileNo().trim().isEmpty()) {
             throw new InvalidParamException(MOBILE_NUMBER_REQUIRED);
         }
 
-        // Check if a mobile no already exists
-        if (registerUserDto.getMobileNo() != null) {
-            boolean exists = userService.isMobileExists(registerUserDto.getMobileNo());
-            if (exists) {
-                throw new InvalidParamException(MOBILE_NUMBER_ALREADY_REGISTERED);
-            }
+        // Check if mobile number already exists
+        if (userService.isMobileExists(registerUserDto.getMobileNo())) {
+            throw new InvalidParamException(MOBILE_NUMBER_ALREADY_REGISTERED);
         }
 
+        // Map DTO to Entity
         User user = modelMapper.map(registerUserDto, User.class);
-//        user.setUserName(registerUserDto.getUsername());
-//        user.setFirstName(registerUserDto.getFirstName());
-//        user.setLastName(registerUserDto.getLastName());
-
         if (registerUserDto.getPassword() == null || registerUserDto.getPassword().trim().isEmpty()) {
             throw new InvalidParamException("Password cannot be null or empty");
         }
-        user.setUserName(registerUserDto.getFirstName()+"@"+registerUserDto.getMobileNo());
+
+        user.setUserName(registerUserDto.getFirstName() + "@" + registerUserDto.getMobileNo());
         user.setPasswordHash(passwordEncoder.encode(registerUserDto.getPassword()));
 
+        // Save User
         user = userService.saveUser(user);
 
+        // Return saved user as DTO
         return modelMapper.map(user, RegisterUserDto.class);
     }
+
 
     public RegisterUserDto updateUser(RegisterUserDto registerUserDto) {
         if (registerUserDto == null) {

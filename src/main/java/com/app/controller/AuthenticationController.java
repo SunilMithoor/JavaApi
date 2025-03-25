@@ -3,10 +3,9 @@ package com.app.controller;
 
 import com.app.config.LoggerService;
 import com.app.dto.LoginUserDto;
-import com.app.dto.RegisterUserDto;
 import com.app.facade.UserFacade;
 import com.app.model.common.ResponseHandler;
-import com.app.responses.LoginUserResponseData;
+import com.app.response.LoginUserResponseData;
 import com.app.security.jwt.JwtUtil;
 import com.app.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +36,7 @@ import static com.app.util.Utils.tagMethodName;
 @RequestMapping("/api/auth")
 @Tag(name = "/api/auth", description = "Auth APIs")
 @Validated
+@SecurityRequirement(name = "Authorization")
 public class AuthenticationController {
 
     @Autowired
@@ -43,7 +44,7 @@ public class AuthenticationController {
     @Autowired
     private LoggerService logger;
     @Autowired
-    private JwtUtil jwtService;
+    private JwtUtil jwtUtil;
     @Autowired
     private AuthenticationService authenticationService;
 
@@ -88,13 +89,24 @@ public class AuthenticationController {
         if (authenticatedUser == null) {
             return ResponseHandler.failure(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
+
+        // Retrieve the old token from Redis
+        String oldToken = jwtUtil.getUserToken(authenticatedUser.getUsername());
+        if (oldToken != null) {
+            jwtUtil.blacklistToken(oldToken, jwtUtil.getExpirationTime());
+        }
+
         // Generate JWT Token
-        String jwtToken = jwtService.generateToken(authenticatedUser);
+        String jwtToken = jwtUtil.generateToken(authenticatedUser);
+
+        // Store the latest token in Redis for this user
+        jwtUtil.storeUserToken(authenticatedUser.getUsername(), jwtToken, jwtUtil.getExpirationTime());
+
         logger.response(tagMethodName(TAG, methodName) + "Jwt Token: ", jwtToken);
 
         LoginUserResponseData loginResponse = new LoginUserResponseData();
         loginResponse.setJwtToken(jwtToken);
-        loginResponse.setExpiresIn(jwtService.getExpirationTime());
+        loginResponse.setExpiresIn(jwtUtil.getExpirationTime());
         logger.response(tagMethodName(TAG, methodName) + " LoginResponse: ", loginResponse);
         return ResponseHandler.success(HttpStatus.OK, loginResponse, "Success");
     }

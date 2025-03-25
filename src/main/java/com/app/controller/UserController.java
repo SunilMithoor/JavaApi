@@ -1,9 +1,14 @@
 package com.app.controller;
 
 import com.app.config.LoggerService;
+import com.app.dto.LoginUserDto;
 import com.app.dto.RegisterUserDto;
+import com.app.exception.custom.InvalidParamException;
+import com.app.exception.custom.UserAlreadyExistException;
 import com.app.facade.UserFacade;
 import com.app.model.common.ResponseHandler;
+import com.app.response.RegisterUserResponseData;
+import com.app.security.jwt.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -12,14 +17,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -35,33 +40,16 @@ import static com.app.util.Utils.tagMethodName;
 @RequestMapping("/api/users")
 @Tag(name = "/api/users", description = "User APIs")
 @Validated
+@SecurityRequirement(name = "Authorization")
 public class UserController {
 
     @Autowired
     private UserFacade facade;
     @Autowired
     private LoggerService logger;
-
+    @Autowired
+    private JwtUtil jwtUtil;
     private final String TAG = "UserController";
-
-    /**
-     * Get user data
-     *
-     * @return RegisterUserDto
-     */
-    @GetMapping("/me")
-    public ResponseEntity<Object> authenticatedUser() {
-        String methodName = "authenticatedUser";
-        logger.request(tagMethodName(TAG, methodName), null);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        RegisterUserDto currentUser = (RegisterUserDto) authentication.getPrincipal();
-        if (currentUser == null) {
-            logger.response(tagMethodName(TAG, methodName), null);
-            return ResponseHandler.failure(HttpStatus.NOT_FOUND, USER_NOT_FOUND);
-        }
-        logger.response(tagMethodName(TAG, methodName), currentUser);
-        return ResponseHandler.success(HttpStatus.OK, currentUser, USER_FETCH_SUCCESS);
-    }
 
 
     /**
@@ -98,7 +86,46 @@ public class UserController {
             logger.response(tagMethodName(TAG, methodName), result.getAllErrors());
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, result.getAllErrors().toString());
         }
-        return ResponseEntity.ok(facade.saveUser(registerUserDto));
+        try {
+            RegisterUserDto savedUser = facade.saveUser(registerUserDto);
+
+            LoginUserDto loginUserDto=new LoginUserDto();
+            loginUserDto.setLoginId(registerUserDto.getEmailId());
+            loginUserDto.setPassword(registerUserDto.getPassword());
+            UserDetails authenticatedUser = facade.authenticate(loginUserDto);
+            logger.response(tagMethodName(TAG, methodName) + "AuthenticatedUser: ", authenticatedUser);
+            if (authenticatedUser == null) {
+                return ResponseHandler.failure(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+            }
+            // Generate JWT Token
+            String jwtToken = jwtUtil.generateToken(authenticatedUser);
+
+            // Store the latest token in Redis for this user
+            jwtUtil.storeUserToken(authenticatedUser.getUsername(), jwtToken, jwtUtil.getExpirationTime());
+
+            logger.response(tagMethodName(TAG, methodName) + "Jwt Token: ", jwtToken);
+
+            // Prepare response
+            RegisterUserResponseData response = new RegisterUserResponseData(
+                    jwtToken,
+                    savedUser.getId(),
+                    savedUser.getFirstName(),
+                    savedUser.getLastName(),
+                    savedUser.getUsername(),
+                    savedUser.getEmailId(),
+                    savedUser.getCountryCode(),
+                    savedUser.getMobileNo(),
+                    savedUser.getRole()
+            );
+            return ResponseHandler.success(HttpStatus.OK, response, "User registered successfully");
+        } catch (UserAlreadyExistException e) {
+            return ResponseHandler.failure(HttpStatus.CONFLICT, "User already exists");
+        } catch (InvalidParamException e) {
+            return ResponseHandler.failure(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            logger.error(tagMethodName(TAG, methodName), "Unexpected error occurred while saving user", e);
+            return ResponseHandler.failure(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+        }
     }
 
 
