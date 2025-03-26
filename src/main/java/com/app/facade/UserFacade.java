@@ -16,11 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,12 +47,11 @@ public class UserFacade {
     /**
      * Get user by id
      */
-    public RegisterUserDto getUser(String id) {
-        if (id == null || id.trim().isEmpty()) {
+    public RegisterUserDto getUser(Long userId) {
+        if (userId == null || userId <= 0) {
             throw new InvalidParamException(USER_ID_REQUIRED);
         }
         try {
-            Long userId = Long.parseLong(id);
             User user = userService.getUserById(userId);
 
             if (user == null) {
@@ -165,24 +162,9 @@ public class UserFacade {
 
 
     /**
-     * Get user by id
+     * User authenticate
      */
-//    public UserDetails authenticate(LoginUserDto input) {
-//        if (input == null) {
-//            throw new InvalidParamException("User data cannot be null");
-//        }
-//        authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(
-//                        input.getEmailId(),
-//                        input.getPassword()
-//                )
-//        );
-//        User user = authenticationService.getUserData(input.getEmailId())
-//                .orElseThrow(UserNotFoundException::new);
-//
-//        return modelMapper.map(user, UserDetails.class);
-//    }
-    public UserDetails authenticate(LoginUserDto input) {
+    public User authenticate(LoginUserDto input) {
         String methodName = "authenticate";
         if (input == null) {
             throw new InvalidParamException("User data cannot be null");
@@ -214,14 +196,17 @@ public class UserFacade {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        // Return UserDetails
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPasswordHash(),
-                new ArrayList<>()
-        );
+        User response = new User();
+        response.setUserName(user.getUsername());
+        response.setPasswordHash(user.getPasswordHash());
+        response.setId(user.getId());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setMobileNo(user.getMobileNo());
+        response.setEmailId(user.getEmailId());
+        response.setRole(user.getRole());
+        return response;
     }
-
 
 }
 

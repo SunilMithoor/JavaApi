@@ -3,6 +3,7 @@ package com.app.controller;
 import com.app.config.LoggerService;
 import com.app.dto.LoginUserDto;
 import com.app.dto.RegisterUserDto;
+import com.app.entity.User;
 import com.app.exception.custom.InvalidParamException;
 import com.app.exception.custom.UserAlreadyExistException;
 import com.app.facade.UserFacade;
@@ -24,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -89,10 +89,10 @@ public class UserController {
         try {
             RegisterUserDto savedUser = facade.saveUser(registerUserDto);
 
-            LoginUserDto loginUserDto=new LoginUserDto();
+            LoginUserDto loginUserDto = new LoginUserDto();
             loginUserDto.setLoginId(registerUserDto.getEmailId());
             loginUserDto.setPassword(registerUserDto.getPassword());
-            UserDetails authenticatedUser = facade.authenticate(loginUserDto);
+            User authenticatedUser = facade.authenticate(loginUserDto);
             logger.response(tagMethodName(TAG, methodName) + "AuthenticatedUser: ", authenticatedUser);
             if (authenticatedUser == null) {
                 return ResponseHandler.failure(HttpStatus.UNAUTHORIZED, "Invalid email or password");
@@ -135,7 +135,7 @@ public class UserController {
      * @param id as String
      * @return UserModel
      */
-    @GetMapping("/{id}")
+    @GetMapping()
     @Operation(
             summary = "Get User by ID",
             description = "Fetch a user by their unique ID",
@@ -144,7 +144,7 @@ public class UserController {
                             name = "id",
                             description = "Unique User ID",
                             required = true,
-                            in = ParameterIn.HEADER
+                            in = ParameterIn.QUERY // Change this to QUERY
                     )
             }
     )
@@ -156,11 +156,11 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
 
-    public ResponseEntity<Object> getUserById(@PathVariable String id) {
+    public ResponseEntity<Object> getUserById(@RequestParam("id") Long id) {
         String methodName = "getUserById";
         logger.request(tagMethodName(TAG, methodName), id);
 
-        if (id == null || id.trim().isEmpty()) {
+        if (id == null || id <= 0) {
             logger.warn(tagMethodName(TAG, methodName), "Invalid user ID received: {}");
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, INVALID_USER_ID);
         }
@@ -173,6 +173,40 @@ public class UserController {
         logger.response(tagMethodName(TAG, methodName), result);
         return ResponseHandler.success(HttpStatus.OK, result, USER_FETCH_SUCCESS);
 
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get User by Token", description = "Fetch the logged-in user using JWT token")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User data fetched successfully",
+                    content = @Content(schema = @Schema(implementation = RegisterUserDto.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    public ResponseEntity<Object> getUserByToken(@RequestHeader("Authorization") String token) {
+        String methodName = "getUserByToken";
+        logger.request(tagMethodName(TAG, methodName), token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            logger.response(tagMethodName(TAG, methodName), "Invalid or missing token");
+            return ResponseHandler.failure(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        token = token.substring(7); // Remove "Bearer " prefix
+        logger.response(tagMethodName(TAG, methodName), "Substring token: " + token);
+        Long userId = jwtUtil.extractUserId(token);
+
+        if (userId == null) {
+            return ResponseHandler.failure(HttpStatus.UNAUTHORIZED, "Invalid token");
+        }
+
+        Object user = facade.getUser(userId);
+        if (user == null) {
+            return ResponseHandler.failure(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        return ResponseHandler.success(HttpStatus.OK, user, "User fetched successfully");
     }
 
 
@@ -211,4 +245,6 @@ public class UserController {
             return ResponseHandler.failure(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR);
         }
     }
+
+
 }

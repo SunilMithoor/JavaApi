@@ -3,6 +3,7 @@ package com.app.controller;
 
 import com.app.config.LoggerService;
 import com.app.dto.LoginUserDto;
+import com.app.entity.User;
 import com.app.facade.UserFacade;
 import com.app.model.common.ResponseHandler;
 import com.app.response.LoginUserResponseData;
@@ -20,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -76,7 +76,7 @@ public class AuthenticationController {
         String methodName = "authenticateUser";
         logger.request(tagMethodName(TAG, methodName), loginUserDto);
         if (loginUserDto.getLoginId() == null || loginUserDto.getLoginId().isEmpty()) {
-            logger.warn(tagMethodName(TAG, methodName),"Login ID is missing in request.");
+            logger.warn(tagMethodName(TAG, methodName), "Login ID is missing in request.");
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, "Login ID is required.");
         }
         logger.request(tagMethodName(TAG, methodName), result);
@@ -84,8 +84,8 @@ public class AuthenticationController {
             logger.response(tagMethodName(TAG, methodName), result.getAllErrors());
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, result.getAllErrors().toString());
         }
-        UserDetails authenticatedUser = facade.authenticate(loginUserDto);
-        logger.response(tagMethodName(TAG, methodName) + "AuthenticatedUser: ", authenticatedUser);
+        User authenticatedUser = facade.authenticate(loginUserDto);
+        logger.response(tagMethodName(TAG, methodName), "AuthenticatedUser: " + authenticatedUser);
         if (authenticatedUser == null) {
             return ResponseHandler.failure(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
@@ -102,12 +102,12 @@ public class AuthenticationController {
         // Store the latest token in Redis for this user
         jwtUtil.storeUserToken(authenticatedUser.getUsername(), jwtToken, jwtUtil.getExpirationTime());
 
-        logger.response(tagMethodName(TAG, methodName) + "Jwt Token: ", jwtToken);
+        logger.response(tagMethodName(TAG, methodName), "Jwt Token: " + jwtToken);
 
         LoginUserResponseData loginResponse = new LoginUserResponseData();
         loginResponse.setJwtToken(jwtToken);
         loginResponse.setExpiresIn(jwtUtil.getExpirationTime());
-        logger.response(tagMethodName(TAG, methodName) + " LoginResponse: ", loginResponse);
+        logger.response(tagMethodName(TAG, methodName) , " LoginResponse: "+ loginResponse);
         return ResponseHandler.success(HttpStatus.OK, loginResponse, "Success");
     }
 
