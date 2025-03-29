@@ -5,6 +5,7 @@ public class MessageConstants {
     public static final String USER_FETCHED_SUCCESS = "User data fetched successfully";
     public static final String INTERNAL_SERVER_ERROR = "An internal server error occurred";
     public static final String USER_ID_REQUIRED = "User ID is required";
+    public static final String USER_DATA_NULL = "User data cannot be null";
     public static final String USER_EMAIL_ID_REQUIRED = "User email id is required";
     public static final String USER_ID_VALID_NUMBER = "User ID must be a valid number";
     public static final String USER_SAVED_SUCCESS = "User saved successfully";
@@ -16,6 +17,7 @@ public class MessageConstants {
     public static final String USERS_ALREADY_EXIST = "User already exists";
     public static final String EMAIL_ID_VALID = "Email ID cannot be null or empty";
     public static final String EMAIL_ID_ALREADY_REGISTERED = "Email ID is already registered";
+    public static final String PASSWORD_NULL = "Password cannot be null or empty";
 
     public static final String ADDRESS_LINE1_REQUIRED = "Address Line 1 is required";
     public static final String ADDRESS_LINE1_MAX_LENGTH = "Address Line 1 cannot exceed 255 characters";
@@ -49,7 +51,8 @@ public class MessageConstants {
     public static final String MOBILE_NUMBER_MAX_LENGTH = "Mobile number cannot exceed 15 characters";
     public static final String MOBILE_NUMBER_INVALID_FORMAT = "Invalid mobile number format";
     public static final String PASSWORD_HASH_MAX_LENGTH = "Password hash cannot exceed 255 characters";
-    public static final String PASSWORD_MAX_LENGTH = "Password cannot exceed 255 characters";
+    public static final String PASSWORD_MAX_LENGTH = "Password cannot exceed 50 characters";
+    public static final String PASSWORD_REGEX = "Password must contain at least one letter, one number, and one special character.";
     public static final String OTP_LENGTH = "Otp length should be 6 characters";
     public static final String DATE_OF_BIRTH_INVALID = "Date of birth must be in YYYY-MM-DD format";
     public static final String ROLE_REQUIRED = "Role is required";

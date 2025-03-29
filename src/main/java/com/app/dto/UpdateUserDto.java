@@ -1,6 +1,5 @@
 package com.app.dto;
 
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
@@ -12,12 +11,11 @@ import java.util.Date;
 
 import static com.app.util.MessageConstants.*;
 
-
 @Getter
 @Setter
 @ToString
-public class RegisterUserDto {
-
+public class UpdateUserDto {
+    @NotNull(message = USER_ID_REQUIRED)
     @JsonProperty("id")
     private Long id;
 
@@ -39,9 +37,6 @@ public class RegisterUserDto {
     @JsonProperty("email_id")
     private String emailId;
 
-    @JsonProperty("is_email_id_verified")
-    private Boolean isEmailIdVerified = false;
-
     @NotBlank(message = COUNTRY_CODE_REQUIRED)
     @Size(min = 1, max = 5, message = COUNTRY_CODE_MAX_LENGTH_5)
     @JsonProperty("country_code")
@@ -53,9 +48,6 @@ public class RegisterUserDto {
     @JsonProperty("mobile_no")
     private String mobileNo;
 
-    @JsonProperty("is_mobile_no_verified")
-    private Boolean isMobileNoVerified = false;
-
     @Size(min = 5, max = 50, message = PASSWORD_MAX_LENGTH)
     @Pattern(
             regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]+$",
@@ -64,22 +56,15 @@ public class RegisterUserDto {
     @JsonProperty("password")
     private String password;
 
-
-    @Size(max = 255, message = PASSWORD_HASH_MAX_LENGTH)
-    @JsonProperty("password_hash")
-    private String passwordHash;
-
     @PastOrPresent(message = DATE_OF_BIRTH_INVALID)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @JsonProperty("date_of_birth")
     private Date dateOfBirth;
 
+
     @NotNull(message = ROLE_REQUIRED)
     @Pattern(regexp = "USER|SUPER_ADMIN|ADMIN|SELLER", message = ROLE_INVALID)
     @JsonProperty("role")
-    private String role = "USER";
+    private String role;
 
-    @JsonProperty("is_active")
-    private Boolean isActive = true;
 }
-

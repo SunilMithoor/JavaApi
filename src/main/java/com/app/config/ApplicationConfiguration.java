@@ -38,17 +38,19 @@ public class ApplicationConfiguration {
     UserDetailsService userDetailsService() {
         return loginId -> {
             String methodName = "userDetailsService";
-            logger.info(tagMethodName(TAG, methodName), "Attempting to load user by loginId: " + loginId);
+//            logger.info(tagMethodName(TAG, methodName), "Attempting to load user by loginId: " + loginId);
+            logger.info(tagMethodName(TAG, methodName), "Attempting to load user by loginId: ");
 
-            return userRepository.findByEmailId(loginId)
-                    .or(() -> userRepository.findByUserName(loginId))
+            return userRepository.findByUserName(loginId)
+                    .or(() -> userRepository.findByEmailId(loginId))
                     .or(() -> userRepository.findByMobileNo(loginId))
                     .map(user -> {
-                        logger.info(tagMethodName(TAG, methodName), "User found: " + loginId);
+//                        logger.info(tagMethodName(TAG, methodName), "User found: " + loginId);
+                        logger.info(tagMethodName(TAG, methodName), "User found: ");
                         return (UserDetails) user;
                     })
                     .orElseThrow(() -> {
-                        logger.warn(tagMethodName(TAG, methodName), "User not found: " + loginId);
+                        logger.warn(tagMethodName(TAG, methodName), "User not found: ");
                         return new UsernameNotFoundException(MessageConstants.USER_NOT_FOUND);
                     });
         };

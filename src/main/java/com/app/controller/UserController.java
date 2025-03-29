@@ -3,6 +3,7 @@ package com.app.controller;
 import com.app.config.LoggerService;
 import com.app.dto.LoginUserDto;
 import com.app.dto.RegisterUserDto;
+import com.app.dto.UpdateUserDto;
 import com.app.entity.User;
 import com.app.exception.custom.InvalidParamException;
 import com.app.exception.custom.UserAlreadyExistException;
@@ -245,6 +246,59 @@ public class UserController {
             return ResponseHandler.failure(HttpStatus.INTERNAL_SERVER_ERROR, INTERNAL_ERROR);
         }
     }
+
+
+    @PatchMapping("/update")
+    @Operation(
+            summary = "Update User",
+            description = "Update user details in the database",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "User data to update",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = UpdateUserDto.class)
+                    )
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User updated successfully",
+                    content = @Content(
+                            schema = @Schema(implementation = UpdateUserDto.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid request data"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserDto updateUserDto, BindingResult result) {
+        String methodName = "updateUser";
+        logger.request(tagMethodName(TAG, methodName), updateUserDto);
+
+        if (result.hasErrors()) {
+            logger.response(tagMethodName(TAG, methodName), result.getAllErrors());
+            return ResponseHandler.failure(HttpStatus.BAD_REQUEST, result.getAllErrors().toString());
+        }
+
+        try {
+            // Check if the user exists
+            User existingUser = facade.getUser(updateUserDto.getId());
+            if (existingUser == null) {
+                return ResponseHandler.failure(HttpStatus.NOT_FOUND, "User not found");
+            }
+
+            // Update user details
+            UpdateUserDto updatedUser = facade.updateUser(updateUserDto);
+            logger.response(tagMethodName(TAG, methodName), updatedUser);
+
+            return ResponseHandler.success(HttpStatus.OK, updatedUser, "User updated successfully");
+        } catch (InvalidParamException e) {
+            return ResponseHandler.failure(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            logger.error(tagMethodName(TAG, methodName), "Unexpected error occurred while updating user", e);
+            return ResponseHandler.failure(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+        }
+    }
+
 
 
 }

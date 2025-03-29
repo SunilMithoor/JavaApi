@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return shouldNotFilter;
     }
 
-
+    
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
@@ -61,28 +61,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String methodName = "doFilterInternal";
         logger.info(tagMethodName(TAG, methodName), "Processing request: " + request.getRequestURI());
-        String fullUrl = request.getRequestURL().toString();
-        String queryString = request.getQueryString();
-        if (queryString != null) {
-            fullUrl += "?" + queryString;
-        }
-        logger.info(tagMethodName(TAG, methodName), "Full Request URL: " + fullUrl);
-        logger.info(tagMethodName(TAG, methodName), "Authorization Header: " + request.getHeader("Authorization"));
 
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             logger.warn(tagMethodName(TAG, methodName), "No valid Authorization header found");
-            filterChain.doFilter(request, response);
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "No valid Authorization header found");
             return;
         }
 
         try {
             final String jwt = authHeader.substring(7);
             final String username = jwtUtil.extractUsername(jwt);
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (username != null && authentication == null) {
                 logger.info(tagMethodName(TAG, methodName), "Valid token found for user: " + username);
+
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
                 logger.info(tagMethodName(TAG, methodName), "User details: " + userDetails);
 
@@ -93,6 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
 
+                // Validate the token before setting authentication
                 if (jwtUtil.isTokenValid(jwt, userDetails.getUsername())) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
@@ -109,16 +105,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
+            // Proceed with the filter chain *after authentication is set*
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException ex) {
             logger.warn(tagMethodName(TAG, methodName), "Token expired: " + ex.getMessage());
             sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Token has expired. Please log in again.");
-        } catch (SignatureException ex) {
-            logger.error(tagMethodName(TAG, methodName), "Invalid JWT Signature", ex);
-            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid JWT Signature. Please check your token.");
-        } catch (MalformedJwtException ex) {
-            logger.error(tagMethodName(TAG, methodName), "Malformed JWT", ex);
-            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Malformed JWT. Please use a valid token.");
+        } catch (SignatureException | MalformedJwtException ex) {
+            logger.error(tagMethodName(TAG, methodName), "Invalid JWT", ex);
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid JWT. Please check your token.");
         } catch (Exception exception) {
             logger.error(tagMethodName(TAG, methodName), "Unable to filter", exception);
             handlerExceptionResolver.resolveException(request, response, null, exception);
@@ -129,11 +123,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /**
      * Helper method to send structured error response.
      */
-//    private void sendErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
-//        response.setContentType("application/json");
-//        response.setStatus(status.value());
-//        response.getWriter().write(new ObjectMapper().writeValueAsString(ResponseHandler.failure(status, message)));
-//    }
     private void sendErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
         response.setContentType("application/json");
         response.setStatus(status.value());
