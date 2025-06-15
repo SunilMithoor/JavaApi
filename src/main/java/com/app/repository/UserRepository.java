@@ -3,7 +3,9 @@ package com.app.repository;
 import com.app.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository< User, Long> {
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
 
 
     /**
@@ -14,7 +16,21 @@ public interface UserRepository extends JpaRepository< User, Long> {
      */
     User getUserById(Long id);
 
+    User getUserByEmailId(String emailId);
+
+    User getUserByMobileNo(String mobileNo);
+
     boolean existsByEmailId(String emailId);
 
     boolean existsByMobileNo(String mobileNo);
+
+    Optional<User> findByEmailId(String emailId);
+
+    Optional<User> findByUserName(String username);
+
+    Optional<User> findByMobileNo(String mobileNo);
+
+    Optional<User> findByEmailIdOrMobileNoOrUserName(String emailId, String mobileNo, String username);
+
+
 }
