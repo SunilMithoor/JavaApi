@@ -14,7 +14,7 @@ public class Constants {
         BASE_URL = baseUrl;
     }
 
-    public static final String AUTH_PATH = BASE_URL + "/auth";
-    public static final String USER_PATH = BASE_URL + "/users";
+    public static final String AUTH_PATH = BASE_URL + "v1/auth";
+    public static final String USER_PATH = BASE_URL + "v1/users";
 
 }
