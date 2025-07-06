@@ -33,8 +33,8 @@ import static com.app.util.Utils.tagMethodName;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
-@Tag(name = "/api/auth", description = "Auth APIs")
+@RequestMapping("/api/v1/auth")
+@Tag(name = "/api/v1/auth", description = "Auth APIs")
 @Validated
 @SecurityRequirement(name = "Authorization")
 public class AuthenticationController {
