@@ -103,7 +103,7 @@ public class UserService {
      *
      * @return Users
      */
-    @PreAuthorize("hasAnyRole('USER','ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public List<User> getAllUsers() {
         String methodName = "updateUser";
         logger.request(tagMethodName(TAG, methodName), "Get all Users : ");
