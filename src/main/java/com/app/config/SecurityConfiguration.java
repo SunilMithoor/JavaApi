@@ -2,6 +2,7 @@ package com.app.config;
 
 import com.app.security.jwt.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -21,6 +22,8 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     private final AuthenticationProvider authenticationProvider;
 
@@ -51,12 +54,12 @@ public class SecurityConfiguration {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:8080"));
+        configuration.setAllowedOrigins(List.of(baseUrl));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "UPDATE"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true); // optional, for cookies / sessions
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
         source.registerCorsConfiguration("/**", configuration);
 
         return source;

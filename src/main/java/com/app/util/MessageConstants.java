@@ -1,6 +1,10 @@
 package com.app.util;
 
 public class MessageConstants {
+
+    private MessageConstants() {
+    }
+
     public static final String USER_NOT_FOUND = "User not found";
     public static final String USER_FETCHED_SUCCESS = "User data fetched successfully";
     public static final String INTERNAL_SERVER_ERROR = "An internal server error occurred";
