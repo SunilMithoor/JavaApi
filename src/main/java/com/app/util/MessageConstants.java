@@ -58,4 +58,6 @@ public class MessageConstants {
     public static final String ROLE_REQUIRED = "Role is required";
     public static final String ROLE_INVALID = "Role must be either USER, SUPER_ADMIN, ADMIN or SELLER";
 
+    public static final String DATABASE_CONNECTION_ERROR = "Failed to connect to the database";
+
 }

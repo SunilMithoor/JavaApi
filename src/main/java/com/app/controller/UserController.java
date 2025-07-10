@@ -37,21 +37,24 @@ import static com.app.util.Utils.tagMethodName;
 
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 @Tag(name = "/api/v1/users", description = "User APIs")
 @Validated
 @SecurityRequirement(name = "Authorization")
 public class UserController {
 
-    @Autowired
-    private UserFacade facade;
-    @Autowired
-    private LoggerService logger;
-    @Autowired
-    private JwtUtil jwtUtil;
-    private final String TAG = "UserController";
 
+    private final UserFacade facade;
+    private final LoggerService logger;
+    private final JwtUtil jwtUtil;
+    private static final String TAG = "UserController";
+
+    @Autowired
+    public UserController(UserFacade userFacade, UserFacade facade, LoggerService logger, JwtUtil jwtUtil) {
+        this.facade = userFacade;
+        this.logger = logger;
+        this.jwtUtil = jwtUtil;
+    }
 
     /**
      * Save user
@@ -298,7 +301,6 @@ public class UserController {
             return ResponseHandler.failure(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
         }
     }
-
 
 
 }

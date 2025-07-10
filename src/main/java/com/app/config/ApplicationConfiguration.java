@@ -25,13 +25,16 @@ import static com.app.util.Utils.tagMethodName;
 @EnableWebSecurity
 public class ApplicationConfiguration {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private LoggerService logger;
-
+    private final UserRepository userRepository;
+    private final LoggerService logger;
     private static final String TAG = "ApplicationConfiguration";
 
+
+    @Autowired
+    public ApplicationConfiguration(UserRepository userRepository,LoggerService logger) {
+        this.userRepository = userRepository;
+        this.logger = logger;
+    }
 
     @Bean
     @Transactional(readOnly = true)

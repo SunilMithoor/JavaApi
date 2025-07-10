@@ -31,20 +31,23 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final LoggerService logger;
+    private static final String TAG = "GlobalExceptionHandler";
+
     @Autowired
-    private LoggerService logger;
-    private final String TAG = "GlobalExceptionHandler";
+    public GlobalExceptionHandler(LoggerService logger) {
+        this.logger = logger;
+    }
 
     /**
      * Handles validation exceptions from @Valid in request bodies.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        logger.warn(TAG+" Validation exception: {}", ex.getMessage());
+        logger.warn(TAG + " Validation exception: {}", ex.getMessage());
         String errorMessage = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
@@ -58,7 +61,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex) {
-        logger.warn(TAG+" Constraint violation: {}", ex.getMessage());
+        logger.warn(TAG + " Constraint violation: {}", ex.getMessage());
         String errorMessage = ex.getConstraintViolations()
                 .stream()
                 .map(ConstraintViolation::getMessage)
@@ -72,7 +75,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<Object> handleMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
-        logger.warn(TAG+" Method not allowed: {}", ex.getMessage());
+        logger.warn(TAG + " Method not allowed: {}", ex.getMessage());
         String message = "Request method '" + ex.getMethod() + "' is not supported for this endpoint.";
         return buildResponse(HttpStatus.METHOD_NOT_ALLOWED, message);
     }
@@ -82,7 +85,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex) {
-        logger.warn(TAG+" No endpoint found: {}", ex.getRequestURL());
+        logger.warn(TAG + " No endpoint found: {}", ex.getRequestURL());
         return buildResponse(HttpStatus.NOT_FOUND, "The requested endpoint does not exist: " + ex.getRequestURL());
     }
 
@@ -92,7 +95,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(InvalidParamException.class)
     public ResponseEntity<Object> handleInvalidParamException(InvalidParamException ex) {
-        logger.warn(TAG+" Invalid parameter: {}", ex.getMessage());
+        logger.warn(TAG + " Invalid parameter: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
@@ -101,7 +104,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(UserAlreadyExistException.class)
     public ResponseEntity<Object> handleUserAlreadyExistException(UserAlreadyExistException ex) {
-        logger.warn(TAG+" User already exists: {}", ex.getMessage());
+        logger.warn(TAG + " User already exists: {}", ex.getMessage());
         return buildResponse(HttpStatus.CONFLICT, "User already exists");
     }
 
@@ -110,7 +113,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Object> handleUserNotFoundException(UserNotFoundException ex) {
-        logger.warn(TAG+" User not found: {}", ex.getMessage());
+        logger.warn(TAG + " User not found: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
@@ -119,7 +122,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDuplicateKeyException(DataIntegrityViolationException ex) {
-        logger.error(TAG+" Database constraint violation: {}", ex.getMessage(),ex);
+        logger.error(TAG + " Database constraint violation: {}", ex.getMessage(), ex);
 
         String errorMessage = "Duplicate entry";
         if (ex.getCause() != null && ex.getCause().getMessage() != null) {
@@ -135,20 +138,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Object> handleJsonParseError(HttpMessageNotReadableException ex) {
-        logger.error(TAG+" Invalid JSON received: {}", ex.getMessage(), ex);
+        logger.error(TAG + " Invalid JSON received: {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.BAD_REQUEST, "Invalid JSON format. Please check your request body.");
     }
 
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<Object> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException ex) {
-        logger.error(TAG+" Unsupported Content-Type: {}", ex.getMessage(), ex);
+        logger.error(TAG + " Unsupported Content-Type: {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.BAD_REQUEST, "Unsupported Content-Type. Please use application/json.");
     }
 
     @ExceptionHandler(LockedException.class)
     public ResponseEntity<Object> handleLockedException(LockedException ex) {
-        logger.error(TAG+" Account locked: {}", ex.getMessage(), ex);
+        logger.error(TAG + " Account locked: {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.LOCKED, "Account locked");
     }
 
@@ -158,7 +161,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneralException(Exception ex) {
-        logger.error(TAG+" Unexpected error: {}", ex.getMessage(), ex);
+        logger.error(TAG + " Unexpected error: {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong. Please try again later.");
     }
 
@@ -167,7 +170,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex) {
-        logger.error(TAG+" Bad Credentials : {}", ex.getMessage(), ex);
+        logger.error(TAG + " Bad Credentials : {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.UNAUTHORIZED, "The username or password is incorrect");
     }
 
@@ -176,7 +179,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AccountStatusException.class)
     public ResponseEntity<Object> handleAccountStatusException(AccountStatusException ex) {
-        logger.error(TAG+" Account locked : {}", ex.getMessage(), ex);
+        logger.error(TAG + " Account locked : {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.FORBIDDEN, "The account is locked");
     }
 
@@ -186,7 +189,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex) {
-        logger.error(TAG+" Access Denied : {}", ex.getMessage(), ex);
+        logger.error(TAG + " Access Denied : {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.FORBIDDEN, "You are not authorized to access this resource");
     }
 
@@ -195,7 +198,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(SignatureException.class)
     public ResponseEntity<Object> handleSignatureException(SignatureException ex) {
-        logger.error(TAG+" Invalid signature : {}", ex.getMessage(), ex);
+        logger.error(TAG + " Invalid signature : {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.FORBIDDEN, "The JWT signature is invalid");
     }
 
@@ -204,7 +207,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<Object> handleExpiredJwtException(SignatureException ex) {
-        logger.error(TAG+" Expired Jwt token : {}", ex.getMessage(), ex);
+        logger.error(TAG + " Expired Jwt token : {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.FORBIDDEN, "The JWT token has expired");
     }
 
@@ -221,7 +224,6 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, status);
     }
-
 
 
 }

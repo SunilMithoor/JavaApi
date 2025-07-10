@@ -12,8 +12,12 @@ import java.util.Date;
 @SpringBootApplication
 @ComponentScan(basePackages = "com.app")
 public class Application {
+
+
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-        System.out.println(new Date(System.currentTimeMillis()));
+        System.out.println("Application Started: " + new Date(System.currentTimeMillis()));
     }
+
+
 }

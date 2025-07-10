@@ -27,23 +27,30 @@ import static com.app.util.MessageConstants.*;
 import static com.app.util.Utils.tagMethodName;
 
 @Service
-@RequiredArgsConstructor
 public class UserFacade {
 
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private ModelMapper modelMapper;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private LoggerService logger;
 
-    private final String TAG = "UserFacade";
+    private final UserService userService;
+    private final AuthenticationService authenticationService;
+    private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final LoggerService logger;
+
+    private static final String TAG = "UserFacade";
+
+    @Autowired
+    public UserFacade(UserService userService,AuthenticationService authenticationService, ModelMapper modelMapper,
+                      PasswordEncoder passwordEncoder,AuthenticationManager authenticationManager,LoggerService logger)
+    {
+        this.userService=userService;
+        this.authenticationService=authenticationService;
+        this.modelMapper=modelMapper;
+        this.passwordEncoder=passwordEncoder;
+        this.authenticationManager=authenticationManager;
+        this.logger=logger;
+
+    }
 
     /**
      * Get user by id

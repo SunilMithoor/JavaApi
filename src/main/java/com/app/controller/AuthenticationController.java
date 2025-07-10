@@ -8,7 +8,6 @@ import com.app.facade.UserFacade;
 import com.app.model.common.ResponseHandler;
 import com.app.response.LoginUserResponseData;
 import com.app.security.jwt.JwtUtil;
-import com.app.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +16,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,23 +30,23 @@ import static com.app.util.Utils.tagMethodName;
 
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 @Tag(name = "/api/v1/auth", description = "Auth APIs")
 @Validated
 @SecurityRequirement(name = "Authorization")
 public class AuthenticationController {
 
-    @Autowired
-    private UserFacade facade;
-    @Autowired
-    private LoggerService logger;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private AuthenticationService authenticationService;
+    private final UserFacade facade;
+    private final LoggerService logger;
+    private final JwtUtil jwtUtil;
+    private static final String TAG = "AuthenticationController";
 
-    private final String TAG = "AuthenticationController";
+    @Autowired
+    public AuthenticationController(UserFacade facade, LoggerService logger, JwtUtil jwtUtil) {
+        this.facade = facade;
+        this.logger = logger;
+        this.jwtUtil = jwtUtil;
+    }
 
 
     @PostMapping(name = "Login Api", value = "/login", consumes = {"application/json"})
@@ -107,7 +105,7 @@ public class AuthenticationController {
         LoginUserResponseData loginResponse = new LoginUserResponseData();
         loginResponse.setJwtToken(jwtToken);
         loginResponse.setExpiresIn(jwtUtil.getExpirationTime());
-        logger.response(tagMethodName(TAG, methodName) , " LoginResponse: "+ loginResponse);
+        logger.response(tagMethodName(TAG, methodName), " LoginResponse: " + loginResponse);
         return ResponseHandler.success(HttpStatus.OK, loginResponse, "Success");
     }
 

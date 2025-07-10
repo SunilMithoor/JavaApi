@@ -168,6 +168,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>

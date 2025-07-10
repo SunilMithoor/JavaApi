@@ -21,10 +21,14 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
+
+    private final AuthenticationProvider authenticationProvider;
+
+
     @Autowired
-    private AuthenticationProvider authenticationProvider;
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    public SecurityConfiguration(AuthenticationProvider authenticationProvider) {
+        this.authenticationProvider = authenticationProvider;
+    }
 
 
     @Bean
