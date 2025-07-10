@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String methodName = "shouldNotFilter";
         String path = request.getRequestURI();
-        boolean shouldNotFilter = path.equals("/swagger-ui/index.html") || path.equals("/api/auth/login") || path.equals("/api/users/register");
+        boolean shouldNotFilter = path.equals("/swagger-ui/index.html") || path.equals("/api/v1/auth/login") || path.equals("/api/v1/users/register");
         logger.info(tagMethodName(TAG, methodName), " Request path: " + path + ", shouldNotFilter: " + shouldNotFilter);
         return shouldNotFilter;
     }
