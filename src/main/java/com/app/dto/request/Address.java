@@ -1,4 +1,4 @@
-package com.app.dto;
+package com.app.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +14,7 @@ import static com.app.util.MessageConstants.*;
 
 @Getter
 @Setter
-public class AddressDto {
+public class Address {
 
     @NotNull(message = USER_ID_REQUIRED)
     @JsonProperty("user_id")

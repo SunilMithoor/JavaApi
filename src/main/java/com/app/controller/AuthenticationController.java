@@ -2,11 +2,11 @@ package com.app.controller;
 
 
 import com.app.config.LoggerService;
-import com.app.dto.LoginUserDto;
+import com.app.dto.request.LoginUser;
 import com.app.entity.User;
 import com.app.facade.UserFacade;
 import com.app.model.common.ResponseHandler;
-import com.app.response.LoginUserResponseData;
+import com.app.dto.response.LoginUserData;
 import com.app.security.jwt.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -57,23 +57,23 @@ public class AuthenticationController {
                     description = "Login for the User",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = LoginUserDto.class)
+                            schema = @Schema(implementation = LoginUser.class)
                     )
             )
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User logged in successfully",
                     content = @Content(
-                            schema = @Schema(implementation = LoginUserDto.class)
+                            schema = @Schema(implementation = LoginUser.class)
                     )
             ),
             @ApiResponse(responseCode = "401", description = "Request denied"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    public ResponseEntity<Object> authenticateUser(@Valid @RequestBody LoginUserDto loginUserDto, BindingResult result) {
+    public ResponseEntity<Object> authenticateUser(@Valid @RequestBody LoginUser loginUser, BindingResult result) {
         String methodName = "authenticateUser";
-        logger.request(tagMethodName(TAG, methodName), loginUserDto);
-        if (loginUserDto.getLoginId() == null || loginUserDto.getLoginId().isEmpty()) {
+        logger.request(tagMethodName(TAG, methodName), loginUser);
+        if (loginUser.getLoginId() == null || loginUser.getLoginId().isEmpty()) {
             logger.warn(tagMethodName(TAG, methodName), "Login ID is missing in request.");
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, "Login ID is required.");
         }
@@ -82,7 +82,7 @@ public class AuthenticationController {
             logger.response(tagMethodName(TAG, methodName), result.getAllErrors());
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, result.getAllErrors().toString());
         }
-        User authenticatedUser = facade.authenticate(loginUserDto);
+        User authenticatedUser = facade.authenticate(loginUser);
         logger.response(tagMethodName(TAG, methodName), "AuthenticatedUser: " + authenticatedUser);
         if (authenticatedUser == null) {
             return ResponseHandler.failure(HttpStatus.UNAUTHORIZED, "Invalid email or password");
@@ -102,7 +102,7 @@ public class AuthenticationController {
 
         logger.response(tagMethodName(TAG, methodName), "Jwt Token: " + jwtToken);
 
-        LoginUserResponseData loginResponse = new LoginUserResponseData();
+        LoginUserData loginResponse = new LoginUserData();
         loginResponse.setJwtToken(jwtToken);
         loginResponse.setExpiresIn(jwtUtil.getExpirationTime());
         logger.response(tagMethodName(TAG, methodName), " LoginResponse: " + loginResponse);

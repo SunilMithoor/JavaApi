@@ -1,4 +1,4 @@
-package com.app.response;
+package com.app.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterUserResponseData {
+public class RegisterUserData {
     @JsonProperty("jwt_token")
     private String jwtToken;
     @JsonProperty("user_id")

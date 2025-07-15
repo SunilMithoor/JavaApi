@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
         this.logger = logger;
     }
 
-    private static final String TAG = "UserService";
+    private static final String TAG = "UserServiceImpl";
 
     /**
      * Get user by id

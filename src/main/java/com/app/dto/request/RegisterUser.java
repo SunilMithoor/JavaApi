@@ -1,4 +1,4 @@
-package com.app.dto;
+package com.app.dto.request;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -16,7 +16,7 @@ import static com.app.util.MessageConstants.*;
 @Getter
 @Setter
 @ToString
-public class RegisterUserDto {
+public class RegisterUser {
 
     @JsonProperty("id")
     private Long id;

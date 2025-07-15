@@ -1,6 +1,7 @@
 package com.app.security.jwt;
 
 import com.app.config.LoggerService;
+import com.app.facade.UserFacade;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -33,16 +34,21 @@ import static com.app.util.Utils.tagMethodName;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private HandlerExceptionResolver handlerExceptionResolver;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private UserDetailsService userDetailsService;
-    @Autowired
-    private LoggerService logger;
+    private final HandlerExceptionResolver handlerExceptionResolver;
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
+    private final LoggerService logger;
 
     private final String TAG = "JwtAuthenticationFilter";
+
+    @Autowired
+    public JwtAuthenticationFilter(HandlerExceptionResolver handlerExceptionResolver, JwtUtil jwtUtil,
+                                   LoggerService logger, UserDetailsService userDetailsService) {
+        this.handlerExceptionResolver = handlerExceptionResolver;
+        this.userDetailsService = userDetailsService;
+        this.logger = logger;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -53,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return shouldNotFilter;
     }
 
-    
+
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,

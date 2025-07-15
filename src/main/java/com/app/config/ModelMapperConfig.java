@@ -16,8 +16,8 @@ public class ModelMapperConfig {
 //    @Bean
 //    public ModelMapper modelMapper() {
 //        ModelMapper modelMapper = new ModelMapper();
-//        modelMapper.typeMap(RegisterUserDto.class, User.class)
-//                .addMappings(mapper -> mapper.map(RegisterUserDto::getUsername, User::setUserName));
+//        modelMapper.typeMap(RegisterUser.class, User.class)
+//                .addMappings(mapper -> mapper.map(RegisterUser::getUsername, User::setUserName));
 //        return modelMapper;
 //    }
 
