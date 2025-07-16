@@ -29,10 +29,7 @@ import static com.app.util.Utils.tagMethodName;
 @Component
 public class JwtUtil {
 
-    @Autowired
-    private LoggerService logger;
-
-    private final String TAG = "JwtUtil";
+    private static final String TAG = "JwtUtil";
 
     @Value("${security.jwt.secret-key}")
     private String secretKey;
@@ -40,9 +37,15 @@ public class JwtUtil {
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
+    private final LoggerService logger;
 
+
+    @Autowired
+    public JwtUtil(LoggerService logger, StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+        this.logger = logger;
+    }
 
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
@@ -319,15 +322,13 @@ public class JwtUtil {
 //            claims.forEach((key, value) -> logger.info(tagMethodName(TAG, methodName), key + ": " + value));
 
             PublicKey publicKey = readPublicKey();
-            Claims claims = Jwts.parserBuilder()
+            return Jwts.parserBuilder()
                     .setSigningKey(publicKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
             // Log all claims explicitly
 //            claims.forEach((key, value) -> logger.info(tagMethodName(TAG, methodName), key + ": " + value));
-
-            return claims;
         } catch (ExpiredJwtException e) {
             logger.error(tagMethodName(TAG, methodName), "JWT Token has expired", e);
             throw new ExpiredJwtException(e.getHeader(), e.getClaims(), "JWT token is expired");

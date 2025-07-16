@@ -1,4 +1,4 @@
-package com.app.dto;
+package com.app.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,7 +14,7 @@ import static com.app.util.MessageConstants.*;
 @Getter
 @Setter
 @ToString
-public class UpdateUserDto {
+public class UpdateUser {
     @NotNull(message = USER_ID_REQUIRED)
     @JsonProperty("id")
     private Long id;

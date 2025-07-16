@@ -1,15 +1,15 @@
 package com.app.controller;
 
 import com.app.config.LoggerService;
-import com.app.dto.LoginUserDto;
-import com.app.dto.RegisterUserDto;
-import com.app.dto.UpdateUserDto;
+import com.app.dto.request.LoginUser;
+import com.app.dto.request.RegisterUser;
+import com.app.dto.request.UpdateUser;
 import com.app.entity.User;
 import com.app.exception.custom.InvalidParamException;
 import com.app.exception.custom.UserAlreadyExistException;
 import com.app.facade.UserFacade;
 import com.app.model.common.ResponseHandler;
-import com.app.response.RegisterUserResponseData;
+import com.app.dto.response.RegisterUserData;
 import com.app.security.jwt.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,7 +22,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,27 +36,30 @@ import static com.app.util.Utils.tagMethodName;
 
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 @Tag(name = "/api/v1/users", description = "User APIs")
 @Validated
 @SecurityRequirement(name = "Authorization")
 public class UserController {
 
-    @Autowired
-    private UserFacade facade;
-    @Autowired
-    private LoggerService logger;
-    @Autowired
-    private JwtUtil jwtUtil;
-    private final String TAG = "UserController";
 
+    private final UserFacade facade;
+    private final LoggerService logger;
+    private final JwtUtil jwtUtil;
+    private static final String TAG = "UserController";
+
+    @Autowired
+    public UserController(UserFacade userFacade, LoggerService logger, JwtUtil jwtUtil) {
+        this.facade = userFacade;
+        this.logger = logger;
+        this.jwtUtil = jwtUtil;
+    }
 
     /**
      * Save user
      *
-     * @param registerUserDto as RegisterUserDto
-     * @return RegisterUserDto
+     * @param registerUser as RegisterUser
+     * @return RegisterUser
      */
     @PostMapping("/register")
     @Operation(
@@ -67,33 +69,33 @@ public class UserController {
                     description = "User data to save",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = RegisterUserDto.class)
+                            schema = @Schema(implementation = RegisterUser.class)
                     )
             )
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User saved successfully",
                     content = @Content(
-                            schema = @Schema(implementation = RegisterUserDto.class)
+                            schema = @Schema(implementation = RegisterUser.class)
                     )
             ),
             @ApiResponse(responseCode = "400", description = "Invalid request data"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    public ResponseEntity<?> saveUser(@Valid @RequestBody RegisterUserDto registerUserDto, BindingResult result) {
+    public ResponseEntity<?> saveUser(@Valid @RequestBody RegisterUser registerUser, BindingResult result) {
         String methodName = "saveUser";
-        logger.request(tagMethodName(TAG, methodName), registerUserDto);
+        logger.request(tagMethodName(TAG, methodName), registerUser);
         if (result.hasErrors()) {
             logger.response(tagMethodName(TAG, methodName), result.getAllErrors());
             return ResponseHandler.failure(HttpStatus.BAD_REQUEST, result.getAllErrors().toString());
         }
         try {
-            RegisterUserDto savedUser = facade.saveUser(registerUserDto);
+            RegisterUser savedUser = facade.saveUser(registerUser);
 
-            LoginUserDto loginUserDto = new LoginUserDto();
-            loginUserDto.setLoginId(registerUserDto.getEmailId());
-            loginUserDto.setPassword(registerUserDto.getPassword());
-            User authenticatedUser = facade.authenticate(loginUserDto);
+            LoginUser loginUser = new LoginUser();
+            loginUser.setLoginId(registerUser.getEmailId());
+            loginUser.setPassword(registerUser.getPassword());
+            User authenticatedUser = facade.authenticate(loginUser);
             logger.response(tagMethodName(TAG, methodName) + "AuthenticatedUser: ", authenticatedUser);
             if (authenticatedUser == null) {
                 return ResponseHandler.failure(HttpStatus.UNAUTHORIZED, "Invalid email or password");
@@ -107,7 +109,7 @@ public class UserController {
             logger.response(tagMethodName(TAG, methodName) + "Jwt Token: ", jwtToken);
 
             // Prepare response
-            RegisterUserResponseData response = new RegisterUserResponseData(
+            RegisterUserData response = new RegisterUserData(
                     jwtToken,
                     savedUser.getId(),
                     savedUser.getFirstName(),
@@ -151,7 +153,7 @@ public class UserController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User data fetched successfully",
-                    content = @Content(schema = @Schema(implementation = RegisterUserDto.class))),
+                    content = @Content(schema = @Schema(implementation = RegisterUser.class))),
             @ApiResponse(responseCode = "400", description = "Invalid User ID"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
@@ -180,7 +182,7 @@ public class UserController {
     @Operation(summary = "Get User by Token", description = "Fetch the logged-in user using JWT token")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User data fetched successfully",
-                    content = @Content(schema = @Schema(implementation = RegisterUserDto.class))),
+                    content = @Content(schema = @Schema(implementation = RegisterUser.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
@@ -224,7 +226,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully",
                     content = @Content(
-                            array = @ArraySchema(schema = @Schema(implementation = RegisterUserDto.class))
+                            array = @ArraySchema(schema = @Schema(implementation = RegisterUser.class))
                     )
             ),
             @ApiResponse(responseCode = "204", description = "No users found"),
@@ -234,7 +236,7 @@ public class UserController {
         String methodName = "getUsers";
         logger.request(tagMethodName(TAG, methodName), null);
         try {
-            List<RegisterUserDto> result = facade.getUsers();
+            List<RegisterUser> result = facade.getUsers();
             if (result == null || result.isEmpty()) {
                 logger.warn(tagMethodName(TAG, methodName), "No users found in the database");
                 return ResponseHandler.failure(HttpStatus.NO_CONTENT, NO_USERS_FOUND);
@@ -256,23 +258,23 @@ public class UserController {
                     description = "User data to update",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = UpdateUserDto.class)
+                            schema = @Schema(implementation = UpdateUser.class)
                     )
             )
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User updated successfully",
                     content = @Content(
-                            schema = @Schema(implementation = UpdateUserDto.class)
+                            schema = @Schema(implementation = UpdateUser.class)
                     )
             ),
             @ApiResponse(responseCode = "400", description = "Invalid request data"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserDto updateUserDto, BindingResult result) {
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUser updateUser, BindingResult result) {
         String methodName = "updateUser";
-        logger.request(tagMethodName(TAG, methodName), updateUserDto);
+        logger.request(tagMethodName(TAG, methodName), updateUser);
 
         if (result.hasErrors()) {
             logger.response(tagMethodName(TAG, methodName), result.getAllErrors());
@@ -281,13 +283,13 @@ public class UserController {
 
         try {
             // Check if the user exists
-            User existingUser = facade.getUser(updateUserDto.getId());
+            User existingUser = facade.getUser(updateUser.getId());
             if (existingUser == null) {
                 return ResponseHandler.failure(HttpStatus.NOT_FOUND, "User not found");
             }
 
             // Update user details
-            UpdateUserDto updatedUser = facade.updateUser(updateUserDto);
+            UpdateUser updatedUser = facade.updateUser(updateUser);
             logger.response(tagMethodName(TAG, methodName), updatedUser);
 
             return ResponseHandler.success(HttpStatus.OK, updatedUser, "User updated successfully");
@@ -298,7 +300,6 @@ public class UserController {
             return ResponseHandler.failure(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
         }
     }
-
 
 
 }

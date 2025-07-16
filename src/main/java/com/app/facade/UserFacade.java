@@ -2,16 +2,15 @@ package com.app.facade;
 
 
 import com.app.config.LoggerService;
-import com.app.dto.LoginUserDto;
-import com.app.dto.RegisterUserDto;
-import com.app.dto.UpdateUserDto;
+import com.app.dto.request.LoginUser;
+import com.app.dto.request.RegisterUser;
+import com.app.dto.request.UpdateUser;
 import com.app.entity.User;
 import com.app.exception.custom.InvalidParamException;
 import com.app.exception.custom.UserAlreadyExistException;
 import com.app.exception.custom.UserNotFoundException;
-import com.app.service.AuthenticationService;
-import com.app.service.UserService;
-import lombok.RequiredArgsConstructor;
+import com.app.service.AuthenticationServiceImpl;
+import com.app.service.UserServiceImpl;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,29 +20,33 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.app.util.MessageConstants.*;
 import static com.app.util.Utils.tagMethodName;
 
 @Service
-@RequiredArgsConstructor
 public class UserFacade {
 
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private ModelMapper modelMapper;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private LoggerService logger;
 
-    private final String TAG = "UserFacade";
+    private final UserServiceImpl userService;
+    private final AuthenticationServiceImpl authenticationService;
+    private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final LoggerService logger;
+
+    private static final String TAG = "UserFacade";
+
+    @Autowired
+    public UserFacade(UserServiceImpl userService, AuthenticationServiceImpl authenticationService, ModelMapper modelMapper, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, LoggerService logger) {
+        this.userService = userService;
+        this.authenticationService = authenticationService;
+        this.modelMapper = modelMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.logger = logger;
+
+    }
 
     /**
      * Get user by id
@@ -76,7 +79,7 @@ public class UserFacade {
      *
      * @return List of UserModel (DTO)
      */
-    public List<RegisterUserDto> getUsers() {
+    public List<RegisterUser> getUsers() {
         String methodName = "getUsers";
         logger.request(tagMethodName(TAG, methodName), "Get users ");
         List<User> users = userService.getAllUsers();
@@ -85,142 +88,138 @@ public class UserFacade {
             logger.error(tagMethodName(TAG, methodName), "User not found", null);
             throw new UserNotFoundException();
         }
-        return users.stream()
-                .map(user -> modelMapper.map(user, RegisterUserDto.class))
-                .collect(Collectors.toList());
+        return users.stream().map(user -> modelMapper.map(user, RegisterUser.class)).toList();
     }
 
     /**
      * Save user
      *
-     * @param registerUserDto as RegisterUserDto
-     * @return RegisterUserDto (DTO)
+     * @param registerUser as RegisterUser
+     * @return RegisterUser (DTO)
      */
 
-    public RegisterUserDto saveUser(RegisterUserDto registerUserDto) {
+    public RegisterUser saveUser(RegisterUser registerUser) {
         String methodName = "saveUser";
-        logger.request(tagMethodName(TAG, methodName), registerUserDto);
-        if (registerUserDto == null) {
-            logger.error(tagMethodName(TAG, methodName), "User data cannot be null",null);
+        logger.request(tagMethodName(TAG, methodName), registerUser);
+        if (registerUser == null) {
+            logger.error(tagMethodName(TAG, methodName), "User data cannot be null", null);
             throw new InvalidParamException(USER_DATA_NULL);
         }
 
         // Check if user already exists
-        if (registerUserDto.getId() != null) {
-            User existingUser = userService.getUserById(registerUserDto.getId());
+        if (registerUser.getId() != null) {
+            User existingUser = userService.getUserById(registerUser.getId());
             logger.response(tagMethodName(TAG, methodName), existingUser);
             if (existingUser != null) {
-                logger.error(tagMethodName(TAG, methodName), "User already exist",null);
+                logger.error(tagMethodName(TAG, methodName), "User already exist", null);
                 throw new UserAlreadyExistException();
             }
         }
 
-        if (registerUserDto.getEmailId() == null || registerUserDto.getEmailId().trim().isEmpty()) {
-            logger.error(tagMethodName(TAG, methodName), "User Email Id is null",null);
+        if (registerUser.getEmailId() == null || registerUser.getEmailId().trim().isEmpty()) {
+            logger.error(tagMethodName(TAG, methodName), "User Email Id is null", null);
             throw new InvalidParamException(EMAIL_ID_VALID);
         }
 
         // Check if email already exists
-        if (userService.isEmailExists(registerUserDto.getEmailId())) {
-            logger.error(tagMethodName(TAG, methodName), "User Email already exists",null);
+        if (userService.isEmailExists(registerUser.getEmailId())) {
+            logger.error(tagMethodName(TAG, methodName), "User Email already exists", null);
             throw new InvalidParamException(EMAIL_ID_ALREADY_REGISTERED);
         }
 
-        if (registerUserDto.getMobileNo() == null || registerUserDto.getMobileNo().trim().isEmpty()) {
-            logger.error(tagMethodName(TAG, methodName), "Mobile no required",null);
+        if (registerUser.getMobileNo() == null || registerUser.getMobileNo().trim().isEmpty()) {
+            logger.error(tagMethodName(TAG, methodName), "Mobile no required", null);
             throw new InvalidParamException(MOBILE_NUMBER_REQUIRED);
         }
 
         // Check if mobile number already exists
-        if (userService.isMobileExists(registerUserDto.getMobileNo())) {
-            logger.error(tagMethodName(TAG, methodName), "User mobile no already exist",null);
+        if (userService.isMobileExists(registerUser.getMobileNo())) {
+            logger.error(tagMethodName(TAG, methodName), "User mobile no already exist", null);
             throw new InvalidParamException(MOBILE_NUMBER_ALREADY_REGISTERED);
         }
 
         // Map DTO to Entity
-        User user = modelMapper.map(registerUserDto, User.class);
+        User user = modelMapper.map(registerUser, User.class);
         logger.response(tagMethodName(TAG, methodName), user);
-        if (registerUserDto.getPassword() == null || registerUserDto.getPassword().trim().isEmpty()) {
-            logger.error(tagMethodName(TAG, methodName), "User password cannot be null",null);
+        if (registerUser.getPassword() == null || registerUser.getPassword().trim().isEmpty()) {
+            logger.error(tagMethodName(TAG, methodName), "User password cannot be null", null);
             throw new InvalidParamException(PASSWORD_NULL);
         }
 
-        user.setUserName(registerUserDto.getFirstName() + "@" + registerUserDto.getMobileNo());
-        user.setPasswordHash(passwordEncoder.encode(registerUserDto.getPassword()));
+        user.setUserName(registerUser.getFirstName() + "@" + registerUser.getMobileNo());
+        user.setPasswordHash(passwordEncoder.encode(registerUser.getPassword()));
 
         // Save User
         user = userService.saveUser(user);
         logger.response(tagMethodName(TAG, methodName), user);
         // Return saved user as DTO
-        return modelMapper.map(user, RegisterUserDto.class);
+        return modelMapper.map(user, RegisterUser.class);
     }
 
     /**
      * Update user
      *
-     * @param updateUserDto as UpdateUserDto
-     * @return UpdateUserDto (DTO)
+     * @param updateUser as UpdateUser
+     * @return UpdateUser (DTO)
      */
 
-    public UpdateUserDto updateUser(UpdateUserDto updateUserDto) {
+    public UpdateUser updateUser(UpdateUser updateUser) {
         String methodName = "updateUser";
-        logger.request(tagMethodName(TAG, methodName), updateUserDto);
-        if (updateUserDto == null) {
-            logger.error(tagMethodName(TAG, methodName), "User data cannot be null",null);
+        logger.request(tagMethodName(TAG, methodName), updateUser);
+        if (updateUser == null) {
+            logger.error(tagMethodName(TAG, methodName), "User data cannot be null", null);
             throw new InvalidParamException(USER_DATA_NULL);
         }
 
         // Check if user ID is provided
-        if (updateUserDto.getId() == null) {
-            logger.error(tagMethodName(TAG, methodName), "User id is required",null);
+        if (updateUser.getId() == null) {
+            logger.error(tagMethodName(TAG, methodName), "User id is required", null);
             throw new InvalidParamException(USER_ID_REQUIRED);
         }
 
         // Fetch existing user
-        User existingUser = userService.getUserById(updateUserDto.getId());
+        User existingUser = userService.getUserById(updateUser.getId());
         if (existingUser == null) {
             throw new InvalidParamException("User not found");
         }
 
         // Validate email if provided
-        if (updateUserDto.getEmailId() != null && !updateUserDto.getEmailId().trim().isEmpty()) {
-            if (!updateUserDto.getEmailId().equals(existingUser.getEmailId()) && userService.isEmailExists(updateUserDto.getEmailId())) {
-                throw new InvalidParamException(EMAIL_ID_ALREADY_REGISTERED);
-            }
+        if (updateUser.getEmailId() != null && !updateUser.getEmailId().trim().isEmpty() && !updateUser.getEmailId().equals(existingUser.getEmailId()) && userService.isEmailExists(updateUser.getEmailId())) {
+            throw new InvalidParamException(EMAIL_ID_ALREADY_REGISTERED);
         }
+
 
         // Validate mobile number if provided
-        if (updateUserDto.getMobileNo() != null && !updateUserDto.getMobileNo().trim().isEmpty()) {
-            if (!updateUserDto.getMobileNo().equals(existingUser.getMobileNo()) && userService.isMobileExists(updateUserDto.getMobileNo())) {
-                throw new InvalidParamException(MOBILE_NUMBER_ALREADY_REGISTERED);
-            }
+        if (updateUser.getMobileNo() != null && !updateUser.getMobileNo().trim().isEmpty() && !updateUser.getMobileNo().equals(existingUser.getMobileNo()) && userService.isMobileExists(updateUser.getMobileNo())) {
+            throw new InvalidParamException(MOBILE_NUMBER_ALREADY_REGISTERED);
         }
 
+
         // Update existing user's details
-        modelMapper.map(updateUserDto, existingUser);
+        modelMapper.map(updateUser, existingUser);
 
         // Ensure the username follows the same pattern if mobile number is updated
-        if (updateUserDto.getMobileNo() != null && !updateUserDto.getMobileNo().trim().isEmpty()) {
-            existingUser.setUserName(existingUser.getFirstName() + "@" + updateUserDto.getMobileNo());
+        if (updateUser.getMobileNo() != null && !updateUser.getMobileNo().trim().isEmpty()) {
+            existingUser.setUserName(existingUser.getFirstName() + "@" + updateUser.getMobileNo());
         }
 
         // Update password if provided
-        if (updateUserDto.getPassword() != null && !updateUserDto.getPassword().trim().isEmpty()) {
-            existingUser.setPasswordHash(passwordEncoder.encode(updateUserDto.getPassword()));
+        if (updateUser.getPassword() != null && !updateUser.getPassword().trim().isEmpty()) {
+            existingUser.setPasswordHash(passwordEncoder.encode(updateUser.getPassword()));
         }
 
         // Save the updated user
         User updatedUser = userService.updateUser(existingUser);
         logger.response(tagMethodName(TAG, methodName), updatedUser);
         // Convert back to DTO and return
-        return modelMapper.map(updatedUser, UpdateUserDto.class);
+        return modelMapper.map(updatedUser, UpdateUser.class);
     }
 
 
     /**
-     * User authenticate
+     * User authenticates
      */
-    public User authenticate(LoginUserDto input) {
+    public User authenticate(LoginUser input) {
         String methodName = "authenticate";
         if (input == null) {
             throw new InvalidParamException("User data cannot be null");
@@ -235,17 +234,14 @@ public class UserFacade {
         }
 
         // Fetch user using email, mobile number, or username
-        User user = authenticationService.findByEmailIdOrMobileNoOrUserName(input.getLoginId())
-                .orElseThrow(() -> {
-                    logger.warn(tagMethodName(TAG, methodName), "User not found for loginId: " + input.getLoginId());
-                    return new UserNotFoundException();
-                });
+        User user = authenticationService.findByEmailIdOrMobileNoOrUserName(input.getLoginId()).orElseThrow(() -> {
+            logger.warn(tagMethodName(TAG, methodName), "User not found for loginId: " + input.getLoginId());
+            return new UserNotFoundException();
+        });
 
         // Authenticate user
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(input.getLoginId(), input.getPassword())
-            );
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(input.getLoginId(), input.getPassword()));
             logger.info(tagMethodName(TAG, methodName), "User authentication successful for: " + input.getLoginId());
         } catch (Exception e) {
             logger.error(tagMethodName(TAG, methodName), "Authentication failed for user: " + input.getLoginId(), e);

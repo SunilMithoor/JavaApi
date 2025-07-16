@@ -33,38 +33,43 @@ import static com.app.util.Utils.tagMethodName;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private HandlerExceptionResolver handlerExceptionResolver;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private UserDetailsService userDetailsService;
-    @Autowired
-    private LoggerService logger;
+    private final HandlerExceptionResolver handlerExceptionResolver;
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
+    private final LoggerService loggerService;
 
-    private final String TAG = "JwtAuthenticationFilter";
+    private static final String TAG = "JwtAuthenticationFilter";
+
+    @Autowired
+    public JwtAuthenticationFilter(HandlerExceptionResolver handlerExceptionResolver, JwtUtil jwtUtil,
+                                   LoggerService loggerService, UserDetailsService userDetailsService) {
+        this.handlerExceptionResolver = handlerExceptionResolver;
+        this.userDetailsService = userDetailsService;
+        this.loggerService = loggerService;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String methodName = "shouldNotFilter";
         String path = request.getRequestURI();
         boolean shouldNotFilter = path.equals("/swagger-ui/index.html") || path.equals("/api/v1/auth/login") || path.equals("/api/v1/users/register");
-        logger.info(tagMethodName(TAG, methodName), " Request path: " + path + ", shouldNotFilter: " + shouldNotFilter);
+        loggerService.info(tagMethodName(TAG, methodName), " Request path: " + path + ", shouldNotFilter: " + shouldNotFilter);
         return shouldNotFilter;
     }
 
-    
+
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         String methodName = "doFilterInternal";
-        logger.info(tagMethodName(TAG, methodName), "Processing request: " + request.getRequestURI());
+        loggerService.info(tagMethodName(TAG, methodName), "Processing request: " + request.getRequestURI());
 
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn(tagMethodName(TAG, methodName), "No valid Authorization header found");
+            loggerService.warn(tagMethodName(TAG, methodName), "No valid Authorization header found");
             sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "No valid Authorization header found");
             return;
         }
@@ -76,14 +81,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (username != null && authentication == null) {
-                logger.info(tagMethodName(TAG, methodName), "Valid token found for user: " + username);
+                loggerService.info(tagMethodName(TAG, methodName), "Valid token found for user: " + username);
 
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-                logger.info(tagMethodName(TAG, methodName), "User details: " + userDetails);
+                loggerService.info(tagMethodName(TAG, methodName), "User details: " + userDetails);
 
                 // Check if the token is blacklisted
                 if (jwtUtil.isTokenBlacklisted(jwt)) {
-                    logger.warn(tagMethodName(TAG, methodName), "Token is blacklisted for user: " + username);
+                    loggerService.warn(tagMethodName(TAG, methodName), "Token is blacklisted for user: " + username);
                     sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Token has been revoked. Please log in again.");
                     return;
                 }
@@ -97,9 +102,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    logger.info(tagMethodName(TAG, methodName), "User authenticated successfully: " + username);
+                    loggerService.info(tagMethodName(TAG, methodName), "User authenticated successfully: " + username);
                 } else {
-                    logger.warn(tagMethodName(TAG, methodName), "Token is invalid for user: " + username);
+                    loggerService.warn(tagMethodName(TAG, methodName), "Token is invalid for user: " + username);
                     sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid token. Please log in again.");
                     return;
                 }
@@ -108,13 +113,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Proceed with the filter chain *after authentication is set*
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException ex) {
-            logger.warn(tagMethodName(TAG, methodName), "Token expired: " + ex.getMessage());
+            loggerService.warn(tagMethodName(TAG, methodName), "Token expired: " + ex.getMessage());
             sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Token has expired. Please log in again.");
         } catch (SignatureException | MalformedJwtException ex) {
-            logger.error(tagMethodName(TAG, methodName), "Invalid JWT", ex);
+            loggerService.error(tagMethodName(TAG, methodName), "Invalid JWT", ex);
             sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid JWT. Please check your token.");
         } catch (Exception exception) {
-            logger.error(tagMethodName(TAG, methodName), "Unable to filter", exception);
+            loggerService.error(tagMethodName(TAG, methodName), "Unable to filter", exception);
             handlerExceptionResolver.resolveException(request, response, null, exception);
         }
     }

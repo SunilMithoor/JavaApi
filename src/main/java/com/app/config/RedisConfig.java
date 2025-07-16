@@ -16,11 +16,13 @@ import static com.app.util.Utils.tagMethodName;
 @Configuration
 public class RedisConfig {
 
-    @Autowired
-    private LoggerService logger;
-
+    private final LoggerService logger;
     private static final String TAG = "RedisConfig";
 
+    @Autowired
+    public RedisConfig(LoggerService logger) {
+        this.logger = logger;
+    }
 
     @Value("${spring.redis.host}")
     private String redisHost;

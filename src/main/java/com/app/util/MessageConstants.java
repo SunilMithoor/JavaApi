@@ -1,6 +1,10 @@
 package com.app.util;
 
 public class MessageConstants {
+
+    private MessageConstants() {
+    }
+
     public static final String USER_NOT_FOUND = "User not found";
     public static final String USER_FETCHED_SUCCESS = "User data fetched successfully";
     public static final String INTERNAL_SERVER_ERROR = "An internal server error occurred";
@@ -57,5 +61,7 @@ public class MessageConstants {
     public static final String DATE_OF_BIRTH_INVALID = "Date of birth must be in YYYY-MM-DD format";
     public static final String ROLE_REQUIRED = "Role is required";
     public static final String ROLE_INVALID = "Role must be either USER, SUPER_ADMIN, ADMIN or SELLER";
+
+    public static final String DATABASE_CONNECTION_ERROR = "Failed to connect to the database";
 
 }

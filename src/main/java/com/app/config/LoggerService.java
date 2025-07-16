@@ -12,19 +12,25 @@ public class LoggerService {
     private static final Logger logger = LoggerFactory.getLogger(LoggerService.class);
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public void request(String tagMethodName,  Object request) {
-        try {
-            logger.info("[{}] Received request for : {}", tagMethodName, objectMapper.writeValueAsString(request));
-        } catch (Exception e) {
-            logger.error("[{}] Failed to log request for : {}", tagMethodName,  e.getMessage());
+
+    public void request(String tagMethodName, Object request) {
+        if (logger.isInfoEnabled()) {
+            try {
+                logger.info("[{}] Received request for : {}", tagMethodName, objectMapper.writeValueAsString(request));
+            } catch (Exception e) {
+                logger.error("[{}] Failed to log request for : {}", tagMethodName, e.getMessage());
+            }
         }
     }
 
+
     public void response(String tagMethodName,  Object response) {
-        try {
-            logger.info("[{}] Retrieved response for : {}", tagMethodName,  objectMapper.writeValueAsString(response));
-        } catch (Exception e) {
-            logger.error("[{}] Failed to log response for : {}", tagMethodName,  e.getMessage());
+        if (logger.isInfoEnabled()) {
+            try {
+                logger.info("[{}] Retrieved response for : {}", tagMethodName, objectMapper.writeValueAsString(response));
+            } catch (Exception e) {
+                logger.error("[{}] Failed to log response for : {}", tagMethodName, e.getMessage());
+            }
         }
     }
 
