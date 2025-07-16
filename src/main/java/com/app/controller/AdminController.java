@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "Authorization")
 public class AdminController {
 
-    private final LoggerService logger;
+    private final LoggerService loggerService;
     private static final String TAG = "AdminController";
 
     @Autowired
-    public AdminController(LoggerService logger) {
-        this.logger = logger;
+    public AdminController(LoggerService loggerService) {
+        this.loggerService = loggerService;
     }
 
 

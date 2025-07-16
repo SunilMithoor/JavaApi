@@ -1,7 +1,6 @@
 package com.app.controller;
 
 import com.app.config.LoggerService;
-import com.app.dto.response.CustomerData;
 import com.app.dto.response.CustomerPaginationData;
 import com.app.exception.custom.InvalidParamException;
 import com.app.facade.CustomerFacade;

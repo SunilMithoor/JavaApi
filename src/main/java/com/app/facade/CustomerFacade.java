@@ -1,16 +1,11 @@
 package com.app.facade;
 
 import com.app.config.LoggerService;
-import com.app.dto.response.CustomerData;
 import com.app.dto.response.CustomerPaginationData;
-import com.app.entity.User;
-import com.app.exception.custom.InvalidParamException;
-import com.app.exception.custom.UserNotFoundException;
 import com.app.service.CustomerServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static com.app.util.MessageConstants.USER_ID_VALID_NUMBER;
 import static com.app.util.Utils.tagMethodName;
 
 @Service

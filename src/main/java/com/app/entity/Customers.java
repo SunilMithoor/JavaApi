@@ -3,12 +3,9 @@ package com.app.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.PastOrPresent;
 import lombok.*;
 
 import java.util.Date;
-
-import static com.app.util.MessageConstants.DATE_OF_BIRTH_INVALID;
 
 
 @Entity
