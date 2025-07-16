@@ -51,10 +51,8 @@ public class CustomerController {
             CustomerPaginationData data = facade.getPaginatedCustomers(page, size);
 
             Map<String, Object> response = new HashMap<>();
-            Map<String, Object> inner = new HashMap<>();
-            inner.put("data", data.getData());
-            inner.put("meta", data.getMeta());
-            response.put("response", inner);
+            response.put("data", data.getData());
+            response.put("meta", data.getMeta());
 
             return ResponseHandler.success(HttpStatus.OK, response, "Customers list");
         } catch (InvalidParamException e) {
