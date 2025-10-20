@@ -24,6 +24,7 @@ import static com.app.util.MessageConstants.DATE_OF_BIRTH_INVALID;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@Data
 public class User implements UserDetails {
 
     @Id
